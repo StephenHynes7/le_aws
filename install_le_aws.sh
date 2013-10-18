@@ -189,8 +189,7 @@ echo "#! $WORKING_DIR/env/bin/python" >> sync
 echo 'import os' >> sync
 echo 'import sys' >> sync
 echo 'from logentriesprovisioning import sync_log' >> sync
-echo "sync_log.main(os.getcwd(),(sys.argv[1] if len(sys.argv)>0 else '')" >> sync
-echo 'print (sys.argv[1] if len(sys.argv)>0 else '')' >> sync
+echo "sync_log.main(os.getcwd(),(sys.argv[1] if len(sys.argv)>0 else \"\"))" >> sync
 chmod +x sync
 
 # Create aws setup command

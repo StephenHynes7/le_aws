@@ -268,21 +268,33 @@ def remove_log_conf(instance_id):
     """
     Args:
     instance_id is an instance identifier.
-    Returns True if and only if the Logentries-RSyslog configuration file was successfully removed from the instance.
+    Returns True if and only if the Logentries-RSyslog configuration file is no longer present on the remote the instance.
     """
     host_name='%s_%s'%(constants.get_group_name(), instance_id)
     remote_conf_filename = '/etc/rsyslog.d/logentries_%s.conf'%host_name
 
     try:
         # Remove logentries rsyslog conf file
-        output = sudo('rm %s'%remote_conf_filename, warn_only=True)
+        output = sudo(command, warn_only=True)
+        command = 'rm %s'%remote_conf_filename
+        output = sudo(command, warn_only=True)
     except:
         logger.error('Could not remove file. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
     if output.succeeded:
         logger.debug('File successfully removed. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
     else:
         logger.warning('Could not remove file.  remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
-    return output.succeeded
+
+    absent == False
+    command = 'if [ -d %s ]; then echo True;else echo False;fi'%remote_conf_filename    
+    try:
+        output = sudo(command, warn_only=True)
+        absent = (output.stdout == "False")
+        if absent:
+            logger.debug('File is not present on the system. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
+    except:
+        logger.debug('Could not check file presence. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
+    return absent
         
 
 #@parallel
@@ -315,7 +327,8 @@ def deprovision():
         logentries_host = get_logentries_host(log_client,conf_host)
         # If there is no matching host, then it is assumed that it was deleted from Logentries and that no configuration should be associated to this instance.
         if logentries_host is not None:
-            if remove_log_conf(instance_id) and restart_rsyslog(instance_id):
+            if remove_log_conf(instance_id):
+                restart_rsyslog(instance_id)
                 succeeded = log_client.remove_host(logentries_host)
                 if succeeded:
                     logger.warning('Host %s was removed from Logentries.'%host.get_name())
@@ -346,13 +359,13 @@ def main(working_dir=None, depr=''):
         config = SSHConfig()
         config.parse(config_file)
         env._ssh_config = config
-        for i in range(0,len(config._config)):
-            print str(i), ' - ' , config._config[i]
 
     list_hosts = []
     for host_config in env._ssh_config._config:
-        print host_config
         if host_config['host'][0]!='*':
+            host_name = host_config['host'][0]
+            ssh_config = host_config['config'][host_name]
+            logger.info('Found instance ssh config. instance=%s, ssh_config=%s', host_name, ssh_config)
             list_hosts.extend(host_config['host'])
 
     if depr == 'deprovision':

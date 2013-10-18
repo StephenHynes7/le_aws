@@ -274,7 +274,7 @@ def remove_log_conf(instance_id):
     return output.succeeded
         
 
-@parallel
+#@parallel
 def deprovision():
     """
     Deprovisions the instance by removing the logentries rsyslog config file from it, restarting rsyslog and removing the corresponding host from the logentries system.
@@ -313,7 +313,7 @@ def deprovision():
     return
 
 
-def main(working_dir=None, *args):
+def main(working_dir=None, depr=''):
     """
     Main function for the module. Calls other functions according to the parameters provided.
     """
@@ -344,8 +344,7 @@ def main(working_dir=None, *args):
         if host_config['host'][0]!='*':
             list_hosts.extend(host_config['host'])
 
-    if len(args)>1:
-        print args
+    if depr == 'deprovision':
 #        if args[1] in ['deprovision', '-d']:
         execute(deprovision,hosts=list_hosts)
     else:

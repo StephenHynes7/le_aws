@@ -133,11 +133,11 @@ else
 fi
 
 # create working directory
-if [ ! -d logentries ]; then
-    mkdir logentries;
+if [ ! -d le_aws ]; then
+    mkdir le_aws;
 fi
-cd logentries
-
+cd le_aws
+WORKING_DIR=`pwd`
 
 # install virutalenv
 if command -v wget >/dev/null; then
@@ -156,7 +156,6 @@ env/bin/pip install fabric
 env/bin/pip install logentries
 
 # Install LogentriesSDK and LogentriesProvisioning
-WORKING_DIR=`pwd`
 git clone git@github.com:bgaudin/le_aws.git
 cd le_aws/LogentriesProvisioning
 git checkout devel
@@ -190,10 +189,10 @@ echo 'sync_log.main(os.getcwd(),sys.argv)' >> sync
 chmod +x sync
 
 # Create aws setup command
-echo "#! $WORKING_DIR/env/bin/python" >> aws_sync
-echo 'import os' >> aws_sync
-echo 'from logentriesprovisioning import aws_client' >> aws_sync
-echo 'from logentriesprovisioning import sync_log' >> aws_sync
-echo 'aws_client.create_ssh_config(working_dir=os.getcwd())' >> aws_sync
-echo 'sync_log.main(working_dir=os.getcwd())' >> aws_sync
-chmod +x aws_sync
+echo "#! $WORKING_DIR/env/bin/python" >> aws_setup
+echo 'import os' >> aws_setup
+echo 'from logentriesprovisioning import aws_client' >> aws_setup
+echo 'from logentriesprovisioning import sync_log' >> aws_setup
+echo 'aws_client.create_ssh_config(working_dir=os.getcwd())' >> aws_setup
+echo 'sync_log.main(working_dir=os.getcwd())' >> aws_setup
+chmod +x aws_setup

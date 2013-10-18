@@ -168,16 +168,27 @@ def restart_rsyslog(instance_id):
     """
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
     output = None
-    command = 'service rsyslog restart'
+
+    command = 'if [ -d /etc/rsyslog/ ]; then echo True;else echo False;fi'
     try:
         output = sudo(command, warn_only=True)
-        logger.warning('Could not restart syslog. hostname=%s, command=%s', host_name, command)
+        logger.warning('Could check the presence of rsyslog. hostname=%s, command=\'%s\'', host_name, command)
+        if output.stdout == 'True':
+            command = 'service rsyslog restart'
+            try:
+                output = sudo(command, warn_only=True)
+                logger.warning('Could not restart syslog. hostname=%s, command=\'%s\'', host_name, command)
+            except:
+                command = '/etc/init.d/rsyslog restart'
+                try:
+                    sudo(command, warn_only=True)
+                except:
+                    logger.error('Rsyslog could not be restarted. hostname=%s, command=\'%s\'', host_name, command)
+        else:
+            logger.warning('Instance does not support RSyslog. hostname=%s, command=\'%s\'', host_name, command)
+            return False
     except:
-        command = '/etc/init.d/rsyslog restart'
-        try:
-            sudo(command, warn_only=True)
-        except:
-            logger.error('Rsyslog could not be restarted. hostname=%s, command=%s', host_name, command)
+        logger.warning('Could not check the presence of rsyslog. hostname=%s, command=\'%s\'', host_name, command)
 
     if output is None:
         return False

@@ -362,9 +362,9 @@ def main(working_dir=None, depr=''):
 
     list_hosts = []
     for host_config in env._ssh_config._config:
+        host_name = host_config['host'][0]
         if host_config['host'][0]!='*':
-            host_name = host_config['host'][0]
-            ssh_config = host_config['config'][host_name]
+            ssh_config = host_config['config']['hostname']
             logger.info('Found instance ssh config. instance=%s, ssh_config=%s', host_name, ssh_config)
             list_hosts.extend(host_config['host'])
 

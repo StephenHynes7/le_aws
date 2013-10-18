@@ -166,8 +166,9 @@ env/bin/pip install logentries
 #env/bin/pip install file://$WORKING_DIR/le_aws/LogentriesSDK/dist/LogentriesSDK-0.1.0.tar.gz
 #env/bin/pip install file://$WORKING_DIR/le_aws/LogentriesProvisioning/dist/LogentriesProvisioning-0.1.0.tar.gz
 # TODO: check if unzipping this is an issue on Mac OS X
-env/bin/pip install https://raw.github.com/bgaudin/le_aws/master/LogentriesSDK/dist/LogentriesSDK-0.1.0.tar.gz
-env/bin/pip install https://raw.github.com/bgaudin/le_aws/master/LogentriesProvisioning/dist/LogentriesProvisioning-0.1.0.tar.gz
+BRANCH=devel
+env/bin/pip install https://raw.github.com/bgaudin/le_aws/$BRANCH/LogentriesSDK/dist/LogentriesSDK-0.1.0.tar.gz
+env/bin/pip install https://raw.github.com/bgaudin/le_aws/$BRANCH/LogentriesProvisioning/dist/LogentriesProvisioning-0.1.0.tar.gz
 
 # Create aws conf file
 echo '{"aws_secret_access_key": "AWS_SECRET_ACCESS_KEY",' >> aws.json

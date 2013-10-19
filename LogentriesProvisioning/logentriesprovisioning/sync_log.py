@@ -315,27 +315,29 @@ def deprovision():
         logger.info('No existing logentries rsyslog configuration file was found on instance %s',instance_id)
         return
 
+    if remove_log_conf(instance_id):
+        restart_rsyslog(instance_id)
+
     conf_host = log_conf.get_host()
     if conf_host is None:
         logger.error('Error. This instance configuration is missing the corresponding model!! instance_id=%s',instance_id)
         return
     
     if conf_host.get_key() is None:
-        logger.error('Host %s has an logentries-rsyslog config file but no account key!!',host.get_name())
+        logger.error('Host has a logentries-rsyslog config file but no account key, host=%s!!',host.to_json())
     else:
         log_client = logclient.Client(constants.ACCOUNT_KEY)
         logentries_host = get_logentries_host(log_client,conf_host)
+
         # If there is no matching host, then it is assumed that it was deleted from Logentries and that no configuration should be associated to this instance.
         if logentries_host is not None:
-            if remove_log_conf(instance_id):
-                restart_rsyslog(instance_id)
                 succeeded = log_client.remove_host(logentries_host)
                 if succeeded:
-                    logger.warning('Host %s was removed from Logentries.'%host_name)
+                    logger.warning('Host removed from Logentries. host=%s', logentries_host.to_json())
                 else:
-                    logger.error('Could not remove Host %s from Logentries.'%host_name)
+                    logger.error('Could not remove host from Logentries. host=%s', logentries_host.to_json())
         else:
-            logger.error('Could not remove Host %s from Logentries.'%host_name)
+            logger.error('Could not remove host from Logentries. host=%s', logentries_host.to_json())
     return
 
 

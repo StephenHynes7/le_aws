@@ -236,7 +236,6 @@ class Client(object):
 		}
 
 		removed_host, success = self._conn.request( request )
-		self.rm_host( host_key )
 
 		if success:
 			return True

@@ -337,7 +337,7 @@ def deprovision():
                 else:
                     logger.error('Could not remove host from Logentries. host=%s', logentries_host.to_json())
         else:
-            logger.error('Could not remove host from Logentries. host=%s', logentries_host.to_json())
+            logger.error('Could not remove host from Logentries. hostname=%s', host_name)
     return
 
 

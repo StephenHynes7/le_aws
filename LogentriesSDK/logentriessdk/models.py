@@ -339,6 +339,12 @@ class Account(object):
 	def get_account_key(self):
 		return self._account_key
 
+	def get_host(self,hostkey):
+		for host in self.get_hosts():
+			if host.get_key() == hostkey:
+				return host
+		return None
+
 	def get_hosts(self):
 		return self._hosts
 

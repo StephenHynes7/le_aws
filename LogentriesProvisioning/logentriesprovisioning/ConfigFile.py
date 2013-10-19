@@ -4,7 +4,7 @@ import boto.manage.cmdshell
 
 import os.path
 import json
-import Instance
+import instance
 from logentriessdk.models import Log
 from logentriessdk.models import Host
 from logentriessdk.client import Client
@@ -38,7 +38,7 @@ class InstancesConf:
       if 'instances' in conf_json:
          self._instances = []
          for instance_data in conf_json['instances']:
-            instance = Instance.Instance.load_instance_data(instance_data)
+            instance = instance.Instance.load_instance_data(instance_data)
             self._instances.append(instance)
       else:
          print 'instances missing in configuration'
@@ -80,7 +80,7 @@ class InstancesConf:
       else:
          for i in range(0,len(self.get_instances())):
             if self.get_instances()[i] == instance:
-               self._instances[i] = Instance.load_aws_data(instance.to_json())
+               self._instances[i] = instance.load_aws_data(instance.to_json())
                break
 
    def add_instances(self,instances):
@@ -177,7 +177,7 @@ class LoggingConfFile:
       for instance_log in self.get_instance_logs():
          log = self.get_host().get_log(instance_log.get_logentries_log().get_key())
          # the logentries log associated to instance log is updated.
-         instance_log = Instance.InstanceLog(instance_log.get_path(),log)
+         instance_log = instance.InstanceLog(instance_log.get_path(),log)
          model_rep = model_rep + '#' + unicode(instance_log.to_json()) + '\n' 
       return model_rep
 

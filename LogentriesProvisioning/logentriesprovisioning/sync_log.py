@@ -308,7 +308,7 @@ def deprovision():
     log_conf_file = get_instance_log_conf(instance_id)
     if log_conf_file is None:
         logger.debug('Cannot deprovision instance as it has not been provisioned. hostname=%s', host_name)
-        return False
+        return
     log_conf = load_conf_file(log_conf_file, instance_id)
 
     if log_conf is None:
@@ -331,9 +331,11 @@ def deprovision():
                 restart_rsyslog(instance_id)
                 succeeded = log_client.remove_host(logentries_host)
                 if succeeded:
-                    logger.warning('Host %s was removed from Logentries.'%host.get_name())
+                    logger.warning('Host %s was removed from Logentries.'%host_name)
                 else:
-                    logger.error('Could not remove Host %s from Logentries.'%host.get_name())
+                    logger.error('Could not remove Host %s from Logentries.'%host_name)
+        else:
+            logger.error('Could not remove Host %s from Logentries.'%host_name)
     return
 
 

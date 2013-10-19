@@ -5,7 +5,6 @@ import boto.manage.cmdshell
 import os.path
 import json
 import Instance
-import SSHKeys
 from logentriessdk.models import Log
 from logentriessdk.models import Host
 from logentriessdk.client import Client

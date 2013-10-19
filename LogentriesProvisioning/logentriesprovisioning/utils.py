@@ -1,9 +1,4 @@
 from fabric.api import *
-from paramiko.config import SSHConfig
-
-import logentriessdk.client as LogClient 
-from logentriesprovisioning import ConfigFile
-import logentriesprovisioning.constants
 
 import os
 import sys

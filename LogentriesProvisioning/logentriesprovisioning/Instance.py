@@ -352,7 +352,7 @@ class RemoteInstance(Instance):
          print 'Cannot open %s on remote instance %s'%(rsyslog_conf_name,self.get_instance_id())
          logger.warning('Cannot open %s on remote instance %s',rsyslog_conf_name,self.get_instance_id())
       if log_conf_file != None:
-         log_conf = ConfigFile.LoggingConfFile.load_file(log_conf_file,filename)
+         log_conf = configfile.LoggingConfFile.load_file(log_conf_file,filename)
          # Set the configuration file name
          log_conf.set_name(filename)
 
@@ -435,7 +435,7 @@ class RemoteInstance(Instance):
                return
            for log_name in self.get_logs():
                host,_ = log_client.create_log_token(host=host,log_name=log_name)
-           log_conf = ConfigFile.LoggingConfFile(name='logentries_%s.conf'%self.get_instance_id(),host=host)
+           log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%self.get_instance_id(),host=host)
        
        elif self.get_log_conf() is not None:
            log_conf = self.get_log_conf()

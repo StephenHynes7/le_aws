@@ -8,10 +8,9 @@ import os
 import sys
 import socket
 
-from logentriesprovisioning import Instance
-from logentriesprovisioning import SSHKeys
-import logentriessdk.client as LogClient 
-from logentriesprovisioning import ConfigFile
+from logentriesprovisioning import instance
+from logentriesprovisioning import sshkeys
+from logentriesprovisioning import configfile
 from logentriesprovisioning import constants
 
 import logging
@@ -212,7 +211,7 @@ class AWS_Client(object):
             username = ec2_instance.tags['user']
          else:
             username = None
-         return Instance.RemoteInstance(instance_id=ec2_instance.id,ssh_key_name=local_keys[ec2_instance.key_name],ip_address=ec2_instance.ip_address,name=name,platform=platf,username=username)
+         return instance.RemoteInstance(instance_id=ec2_instance.id,ssh_key_name=local_keys[ec2_instance.key_name],ip_address=ec2_instance.ip_address,name=name,platform=platf,username=username)
       return None
 
 
@@ -284,7 +283,7 @@ class AWS_Client(object):
                   logger.error('Exception raised, message=%s',e.message)
               else:
                   key_names = [key_pair.name for key_pair in key_pairs]
-                  ssh_k = SSHKeys.ssh_keys(paths=self.get_aws_conf().get_ssh_key_paths(),names=key_names)
+                  ssh_k = sshkeys.SSHKeys(paths=self.get_aws_conf().get_ssh_key_paths(),names=key_names)
                   local_keys = ssh_k.get_keys_onpaths(ssh_k.get_paths(),ssh_k.get_names())
 
                   for _filter in self.get_aws_conf().get_filters():

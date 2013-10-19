@@ -2,7 +2,7 @@ import os.path
 from os.path import expanduser
 
 # TODO: rename following the same convention as for the other clases
-class ssh_keys:
+class SSHKeys:
 
     @staticmethod
     def expand_path(path):

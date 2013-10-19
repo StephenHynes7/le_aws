@@ -1,8 +1,8 @@
 from fabric.api import *
 from paramiko.config import SSHConfig
 
-import logentriessdk.client as LogClient 
-from logentriesprovisioning import ConfigFile
+import logentriessdk.client as logclient 
+from logentriesprovisioning import configfile
 from logentriesprovisioning import constants
 from logentriesprovisioning import utils
 
@@ -87,7 +87,7 @@ def load_conf_file(log_conf_file,instance_id):
     log_conf = None
     # conf file or return None if it cannot be opened
     if log_conf_file != None:
-        log_conf = ConfigFile.LoggingConfFile.load_file(log_conf_file,instance_id)
+        log_conf = configfile.LoggingConfFile.load_file(log_conf_file,instance_id)
         log_conf_file.close()
     return log_conf
 
@@ -117,27 +117,27 @@ def update_instance_conf(instance_id, log_paths, log_conf):
     Returns the updated log_conf, taking into account new log files present on the instance as well as modifications made to the corresponding logentries host.
     
     """
-    log_client = LogClient.Client(constants.ACCOUNT_KEY)
+    log_client = logclient.Client(constants.ACCOUNT_KEY)
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
 
     # Creation of a host if no configuration file exists
     if log_conf is None and len(log_paths)>0:
         host = utils.create_host_and_logs(log_client,instance_id,log_paths)
-        log_conf = ConfigFile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
+        log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
     # if a configuration file exists for the instance, look for the differences between the log lists
     elif log_conf is not None:
         conf_host = log_conf.get_host()
         if conf_host is None:
             logger.error('This instance configuration is missing the corresponding model!! hostname=%s', host_name)
             host = utils.create_host_and_logs(log_client,instance_id,log_paths)
-            log_conf = ConfigFile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
+            log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
             return log_conf
 
         if conf_host.get_key() is None:
             logger.warning('Instance has a logentries-rsyslog config file but no account key!! hostname=%s', host.get_name())
             logger.warning('Instance is re-provisioned. hostname=%s', host.get_name())
             host = utils.create_host_and_logs(log_client,instance_id,log_paths)
-            log_conf = ConfigFile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
+            log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
             return log_conf
         
         logentries_host = get_logentries_host(log_client,conf_host)
@@ -146,7 +146,7 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             logger.info('Instance has an logentries-rsyslog config file but no matching host in logentries!! hostname=%s', host_name)
             logger.info('Instance will be deprovisioned hostname=%s', host_name)            
             #host = utils.create_host_and_logs(log_client,instance_id,log_paths)
-            #log_conf = ConfigFile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
+            #log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
             return None
 
         for new_log_name in utils.get_new_logs(log_paths, log_conf):
@@ -323,7 +323,7 @@ def deprovision():
     if conf_host.get_key() is None:
         logger.error('Host %s has an logentries-rsyslog config file but no account key!!',host.get_name())
     else:
-        log_client = LogClient.Client(constants.ACCOUNT_KEY)
+        log_client = logclient.Client(constants.ACCOUNT_KEY)
         logentries_host = get_logentries_host(log_client,conf_host)
         # If there is no matching host, then it is assumed that it was deleted from Logentries and that no configuration should be associated to this instance.
         if logentries_host is not None:

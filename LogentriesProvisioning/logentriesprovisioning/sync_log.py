@@ -285,7 +285,7 @@ def remove_log_conf(instance_id):
     except:
         logger.error('Could not remove file. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
 
-    absent == False
+    absent = False
     command = 'if [ -d %s ]; then echo True;else echo False;fi'%remote_conf_filename    
     try:
         output = sudo(command, warn_only=True)

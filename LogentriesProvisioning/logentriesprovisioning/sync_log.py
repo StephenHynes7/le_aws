@@ -1,11 +1,11 @@
 from fabric.api import *
+from fabric.contrib import files
 from paramiko.config import SSHConfig
 
 import logentriessdk.client as logclient 
 from logentriesprovisioning import configfile
 from logentriesprovisioning import constants
 from logentriesprovisioning import utils
-
 import os
 import sys
 import json
@@ -13,6 +13,8 @@ import logging
 
 # get global logger
 logger = logging.getLogger('sync')
+
+_GROUP_HOST_LIST = []
 
 def get_instance_log_paths(instance_id, log_filter):
     """
@@ -169,25 +171,21 @@ def restart_rsyslog(instance_id):
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
     output = None
 
-    command = 'if [ -d /etc/rsyslog/ ]; then echo True;else echo False;fi'
-    try:
-        output = sudo(command, warn_only=True)
-        logger.warning('Could check the presence of rsyslog. hostname=%s, command=\'%s\'', host_name, command)
-        if output.stdout == 'True':
-            command = 'service rsyslog restart'
+    if file.exists('/etc/rsyslog.d/', use_sudo=True):
+        command = 'service rsyslog restart'
+        try:
+            output = sudo(command, warn_only=True)
+            logger.warning('Could not restart syslog. hostname=%s, command=\'%s\'', host_name, command)
+        except:
+            command = '/etc/init.d/rsyslog restart'
             try:
-                output = sudo(command, warn_only=True)
-                logger.warning('Could not restart syslog. hostname=%s, command=\'%s\'', host_name, command)
+                sudo(command, warn_only=True)
             except:
-                command = '/etc/init.d/rsyslog restart'
-                try:
-                    sudo(command, warn_only=True)
-                except:
-                    logger.error('Rsyslog could not be restarted. hostname=%s, command=\'%s\'', host_name, command)
+                logger.error('Rsyslog could not be restarted. hostname=%s, command=\'%s\'', host_name, command)
         else:
             logger.warning('Instance does not support RSyslog. hostname=%s, command=\'%s\'', host_name, command)
             return False
-    except:
+    else:
         logger.warning('Could not check the presence of rsyslog. hostname=%s, command=\'%s\'', host_name, command)
 
     if output is None:
@@ -233,6 +231,23 @@ def deploy_log_conf(instance_id, log_conf):
     return True
 
 
+def get_instance_log_conf(instance_id):
+    """
+    Args:
+    instance_id is an not None instance identifier.
+    Returns the Logentries-RSyslog configuration deployed on the instance or None if no such configuration is deployed.
+    """
+    log_conf_file = get_instance_log_conf(instance_id)
+    if log_conf_file is None:
+        logger.debug('No existing logentries rsyslog configuration file was found. hostname=%s', host_name)
+
+    log_conf = load_conf_file(log_conf_file,instance_id)
+
+    if log_conf is None:
+        logger.info('Logentries rsyslog configuration file could not be read. hostname=%s', host_name)
+
+    return log_conf
+
 #@parallel
 def sync():
     """
@@ -244,15 +259,7 @@ def sync():
 
     log_paths = get_instance_log_paths(instance_id, log_filter)
 
-    log_conf_file = get_instance_log_conf(instance_id)
-    if log_conf_file is None:
-        logger.debug('No existing logentries rsyslog configuration file was found. hostname=%s', host_name)
-
-    log_conf = load_conf_file(log_conf_file,instance_id)
-
-    if log_conf is None:
-        logger.info('Logentries rsyslog configuration file could not be read. hostname=%s', host_name)
-
+    log_conf = get_instance_log_conf(instance_id)
     log_conf = update_instance_conf(instance_id, log_paths, log_conf)
     if log_conf is None:
         logger.info('No new rsyslog configuration was detected. hostname=%s', host_name)
@@ -285,16 +292,10 @@ def remove_log_conf(instance_id):
     except:
         logger.error('Could not remove file. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
 
-    absent = False
-    command = 'if [ -d %s ]; then echo True;else echo False;fi'%remote_conf_filename    
-    try:
-        output = sudo(command, warn_only=True)
-        absent = (output.stdout == "False")
-        if absent:
+    present = file.exists(remote_conf_filename)
+    if not present:
             logger.debug('File is not present on the system. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
-    except:
-        logger.debug('Could not check file presence. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
-    return absent
+    return present
         
 
 #@parallel
@@ -326,7 +327,7 @@ def deprovision():
     if conf_host.get_key() is None:
         logger.error('Host has a logentries-rsyslog config file but no account key, host=%s!!',host.to_json())
     else:
-        log_client = logclient.Client(constants.ACCOUNT_KEY)
+        log_client = logclient.Client(constants.get_account_key())
         logentries_host = get_logentries_host(log_client,conf_host)
 
         # If there is no matching host, then it is assumed that it was deleted from Logentries and that no configuration should be associated to this instance.
@@ -341,7 +342,46 @@ def deprovision():
     return
 
 
-def main(working_dir=None, depr=''):
+def set_instance_host_keyss(group_name=None):
+    """
+    Args:
+    group_name is a string representing a set of hosts.
+    Collects instance host information for host whose location is group_name.
+    """
+    if group_name is None:
+        return
+    instance_id, log_filter = utils.get_log_filter(env.host)
+    host_name = '%s_%s'%(constants.get_group_name(), instance_id)
+
+    global _GROUP_HOST_LIST
+    log_conf = get_instance_log_conf(instance_id)
+    if log_conf is None:
+        return
+    host = log_conf.get_host()
+    if host is not None and host.get_location() == group_name:
+        logger.info('Host found in ssh configuration. host=%s', host.to_json())
+        _GROUP_HOST_LIST.append(host.get_key())
+
+
+def remove_host(group_name,exclude=[]):
+    """
+    Args:
+    group_name is a string representing the name of a group of hosts.
+    exclude is a list of string representing host keys.
+    Removes, from Logentries, hosts that belong to group with name 'group_name' except for the one whose key belong to 'exclude'.
+    """
+    log_client = logclient.Client(constants.get_account_key())
+    if log_client is None or constants.get_account_key() is None:
+        logger.error('Could not retrieve account information. account_key=%s','%s-xxxx-xxxx-xxxx-xxxxxxxxxxxx'%constants.get_account_key().split('-')[0])
+        return
+    hosts = log_client.get_hosts()
+    for host in hosts:
+        if host.get_key() not in _GROUP_HOST_LIST and host.get_location() == group_name:
+            log_client.remove_host(host)
+    return
+
+
+def main(working_dir=None, cmd='', group_name='AWS'):
     """
     Main function for the module. Calls other functions according to the parameters provided.
     """
@@ -372,9 +412,11 @@ def main(working_dir=None, depr=''):
             logger.info('Found instance ssh config. instance=%s, ssh_config=%s', host_name, ssh_config)
             list_hosts.extend(host_config['host'])
 
-    if depr == 'deprovision':
-#        if args[1] in ['deprovision', '-d']:
+    if cmd == 'deprovision':
         execute(deprovision,hosts=list_hosts)
+    elif cmd == 'clean':
+        execute(set_instance_host_keys,hosts=list_hosts)
+        execute(remove_hosts,group_name,hosts=list_hosts)
     else:
         execute(sync,hosts=list_hosts)
 

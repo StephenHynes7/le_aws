@@ -342,7 +342,7 @@ def deprovision():
     return
 
 
-def set_instance_host_keyss(group_name=None):
+def set_instance_host_keys(group_name=None):
     """
     Args:
     group_name is a string representing a set of hosts.
@@ -363,7 +363,7 @@ def set_instance_host_keyss(group_name=None):
         _GROUP_HOST_LIST.append(host.get_key())
 
 
-def remove_host(group_name,exclude=[]):
+def remove_hosts(group_name,exclude=[]):
     """
     Args:
     group_name is a string representing the name of a group of hosts.

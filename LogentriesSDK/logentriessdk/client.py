@@ -379,6 +379,17 @@ class Client(object):
 			return False
 
 
+        def get_hosts(self):
+		""" 
+		Retrieves the hosts of the client account.
+                Returns a not None list of host objects.
+                """
+                account = self.get_account()
+                if account is None:
+                        return []
+		return account.get_hosts()
+
+
         def get_host(self, hostkey, name=None):
 		""" Retrieves the host with the specified logkey. If logkey is None, then this method returns the first encountered host with name 'name'.
                 Returns None if no host with key 'hostkey' or name 'name' could be retrieved.

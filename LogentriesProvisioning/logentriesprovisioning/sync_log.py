@@ -273,17 +273,17 @@ def remove_log_conf(instance_id):
     host_name='%s_%s'%(constants.get_group_name(), instance_id)
     remote_conf_filename = '/etc/rsyslog.d/logentries_%s.conf'%host_name
 
+
     try:
         # Remove logentries rsyslog conf file
-        output = sudo(command, warn_only=True)
         command = 'rm %s'%remote_conf_filename
         output = sudo(command, warn_only=True)
+        if output.succeeded:
+            logger.debug('File successfully removed. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
+        else:
+            logger.warning('Could not remove file.  remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
     except:
         logger.error('Could not remove file. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
-    if output.succeeded:
-        logger.debug('File successfully removed. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
-    else:
-        logger.warning('Could not remove file.  remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
 
     absent == False
     command = 'if [ -d %s ]; then echo True;else echo False;fi'%remote_conf_filename    

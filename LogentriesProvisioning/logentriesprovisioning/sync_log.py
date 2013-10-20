@@ -101,14 +101,12 @@ def get_logentries_host(log_client,conf_host):
     conf_host is a Logentries-Rsyslog configuration object.
     Returns the logentries host corresponding to conf_host or None if no such host is present in the Logentries account.
     """
-    matching_host = None
     account = log_client.get_account()
     if account is not None:
         for host in account.get_hosts():
             if host.get_key() == conf_host.get_key():
-                matching_host = host
-                break
-    return matching_host
+                return host
+    return None
 
 def update_instance_conf(instance_id, log_paths, log_conf):
     """
@@ -152,11 +150,11 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             return None
 
         for new_log_name in utils.get_new_logs(log_paths, log_conf):
-            logentries_host = log_client.create_log_token(host=logentries_host,log_name=new_log_name)
-            logger.info('Log Created. hostname=%s, removed_log_paths=%s',log_conf.get_host().get_name(), new_logs)
+            logentries_host, log_key = log_client.create_log_token(host=logentries_host, log_name=new_log_name)
+            logger.info('Log Created. hostname=%s, log_path=%s, key=%s', logentries_host.get_name(), new_log_name, log_key)
         for removed_log_name in  utils.get_removed_logs(log_paths, log_conf):
-            logentries_host = log_client.remove_log(host=logentries_host,log_name=new_log_name)
-            logger.info('Log Removed. hostname=%s, removed_log_paths=%s',log_conf.get_host().get_name(), new_logs)
+            if log_client.remove_log(host=logentries_host, log_name=new_log_name):
+                logger.info('Log Removed. hostname=%s, log_path=%s', logentries_host.get_name(), removed_log_name)
         log_conf.set_host(logentries_host)
     return log_conf
 

@@ -41,7 +41,7 @@ def get_new_logs(log_paths,log_conf):
         logger.debug('Could not retrieve new log paths. log_paths=%s, hostname=%s', log_paths, log_conf.get_host().get_name())
         return []
     new_log_paths = [log_path for log_path in log_paths if log_path not in log_conf_logs]
-    logger.info('New logs detected. hostname=%s, new_log_paths=%s',log_conf.get_host().get_name(), new_logs)
+    logger.info('New logs detected. hostname=%s, new_log_paths=%s',log_conf.get_host().get_name(), new_log_pathss)
     return new_log_paths
 
 def get_removed_logs(log_paths,log_conf):

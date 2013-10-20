@@ -44,7 +44,7 @@ def get_instance_log_paths(instance_id, log_filter):
     return log_paths
 
 
-def get_instance_log_conf(instance_id):
+def get_instance_log_conf_file(instance_id):
     """
     Args:
     instance_id is an instance identifier.
@@ -171,7 +171,7 @@ def restart_rsyslog(instance_id):
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
     output = None
 
-    if file.exists('/etc/rsyslog.d/', use_sudo=True):
+    if files.exists('/etc/rsyslog.d/', use_sudo=True):
         command = 'service rsyslog restart'
         try:
             output = sudo(command, warn_only=True)
@@ -182,11 +182,9 @@ def restart_rsyslog(instance_id):
                 sudo(command, warn_only=True)
             except:
                 logger.error('Rsyslog could not be restarted. hostname=%s, command=\'%s\'', host_name, command)
-        else:
-            logger.warning('Instance does not support RSyslog. hostname=%s, command=\'%s\'', host_name, command)
-            return False
     else:
-        logger.warning('Could not check the presence of rsyslog. hostname=%s, command=\'%s\'', host_name, command)
+        logger.warning('Instance does not support RSyslog. hostname=%s, command=\'%s\'', host_name)
+        return False
 
     if output is None:
         return False
@@ -237,7 +235,8 @@ def get_instance_log_conf(instance_id):
     instance_id is an not None instance identifier.
     Returns the Logentries-RSyslog configuration deployed on the instance or None if no such configuration is deployed.
     """
-    log_conf_file = get_instance_log_conf(instance_id)
+    host_name = '%s_%s'%(constants.get_group_name(), instance_id)
+    log_conf_file = get_instance_log_conf_file(instance_id)
     if log_conf_file is None:
         logger.debug('No existing logentries rsyslog configuration file was found. hostname=%s', host_name)
 
@@ -292,7 +291,7 @@ def remove_log_conf(instance_id):
     except:
         logger.error('Could not remove file. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
 
-    present = file.exists(remote_conf_filename)
+    present = files.exists(remote_conf_filename)
     if not present:
             logger.debug('File is not present on the system. remote_filename=%s, hostname=%s.', remote_conf_filename, host_name)
     return present
@@ -306,7 +305,7 @@ def deprovision():
     instance_id, log_filter = utils.get_log_filter(env.host)
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
 
-    log_conf_file = get_instance_log_conf(instance_id)
+    log_conf_file = get_instance_log_conf_file(instance_id)
     if log_conf_file is None:
         logger.debug('Cannot deprovision instance as it has not been provisioned. hostname=%s', host_name)
         return
@@ -342,24 +341,23 @@ def deprovision():
     return
 
 
-def set_instance_host_keys(group_name=None):
+def set_instance_host_keys():
     """
     Args:
-    group_name is a string representing a set of hosts.
-    Collects instance host information for host whose location is group_name.
+    Collects host keys associated to instance in fabric host_list.
     """
-    if group_name is None:
-        return
     instance_id, log_filter = utils.get_log_filter(env.host)
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
+    log_client = logclient.Client(constants.get_account_key())
 
     global _GROUP_HOST_LIST
     log_conf = get_instance_log_conf(instance_id)
     if log_conf is None:
         return
-    host = log_conf.get_host()
-    if host is not None and host.get_location() == group_name:
-        logger.info('Host found in ssh configuration. host=%s', host.to_json())
+    conf_host = log_conf.get_host()
+    logger.debug('Checking if host should be kept. host=%s', conf_host)
+    if conf_host is not None:
+        logger.info('Host found in ssh configuration. host=%s', conf_host.to_json())
         _GROUP_HOST_LIST.append(host.get_key())
 
 
@@ -370,6 +368,7 @@ def remove_hosts(group_name,exclude=[]):
     exclude is a list of string representing host keys.
     Removes, from Logentries, hosts that belong to group with name 'group_name' except for the one whose key belong to 'exclude'.
     """
+    global _GROUP_HOST_LIST
     log_client = logclient.Client(constants.get_account_key())
     if log_client is None or constants.get_account_key() is None:
         logger.error('Could not retrieve account information. account_key=%s','%s-xxxx-xxxx-xxxx-xxxxxxxxxxxx'%constants.get_account_key().split('-')[0])
@@ -377,6 +376,7 @@ def remove_hosts(group_name,exclude=[]):
     hosts = log_client.get_hosts()
     for host in hosts:
         if host.get_key() not in _GROUP_HOST_LIST and host.get_location() == group_name:
+            logger.debug('Removing Logentries host. host=%s', host)
             log_client.remove_host(host)
     return
 

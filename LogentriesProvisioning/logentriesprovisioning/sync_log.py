@@ -183,7 +183,7 @@ def restart_rsyslog(instance_id):
             except:
                 logger.error('Rsyslog could not be restarted. hostname=%s, command=\'%s\'', host_name, command)
     else:
-        logger.warning('Instance does not support RSyslog. hostname=%s, command=\'%s\'', host_name)
+        logger.warning('Instance does not support RSyslog. hostname=%s', host_name)
         return False
 
     if output is None:
@@ -358,7 +358,7 @@ def set_instance_host_keys():
     logger.debug('Checking if host should be kept. host=%s', conf_host)
     if conf_host is not None:
         logger.info('Host found in ssh configuration. host=%s', conf_host.to_json())
-        _GROUP_HOST_LIST.append(host.get_key())
+        _GROUP_HOST_LIST.append(conf_host.get_key())
 
 
 def remove_hosts(group_name,exclude=[]):

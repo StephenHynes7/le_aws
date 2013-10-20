@@ -243,7 +243,8 @@ class LoggingConfFile:
          if line.startswith('#LOGENTRIES_MODEL:'):
             host_key_array = line.split(':',1)
             if len(host_key_array) > 1:
-               host.set_key(host_key_array[1])
+               host_key = host_key_array[1].aplit('\n')[0]
+               host.set_key(host_key)
             else:
                print 'Wrong format for Logentries Model in %s'%log_conf.get_name()
                return None

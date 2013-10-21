@@ -149,10 +149,18 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             #log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
             return None
 
-        for new_log_name in utils.get_new_logs(log_paths, log_conf):
+        existing_log_paths = [log.get_filename() for log in logentries_host.get_logs()]
+        logger.info('Logs are already followed on this instance. hostname=%s, log_paths=%s',log_conf.get_host().get_name(), existing_log_paths)
+        new_log_paths = [log_path for log_path in log_paths if log_path not in existing_log_paths]
+        logger.info('New logs detected. hostname=%s, new_log_paths=%s',log_conf.get_host().get_name(), new_log_paths)
+
+
+        for new_log_name in new_log_paths:
             logentries_host, log_key = log_client.create_log_token(host=logentries_host, log_name=new_log_name)
             logger.info('Log Created. hostname=%s, log_path=%s, key=%s', logentries_host.get_name(), new_log_name, log_key)
-        for removed_log in  utils.get_removed_logs(log_paths, log_conf):
+
+        removed_logs = [log for log in existing_log_paths if log.get_filename() not in log_paths]
+        for removed_log in removed_logs:
             if removed_log is not None and log_client.remove_log(host=logentries_host, log=removed_log):
                 logger.info('Log Removed. hostname=%s, log=%s', logentries_host.get_name(), removed_log.to_json())
         log_conf.set_host(logentries_host)

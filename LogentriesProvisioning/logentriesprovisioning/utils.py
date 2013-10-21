@@ -26,43 +26,6 @@ def get_log_filter(host_name):
     return None,{}
 
 
-def get_new_logs(log_paths,log_conf):
-    """
-    Args:
-    log_conf is the Logentries-RSyslog configuration file of an instance.
-    log_paths is the currently known set of log file paths for this instance. It is assumed to not be None.
-    Returns the list of log paths that are not known by the log configuration associated to this instance
-    """
-    if log_conf is None or log_conf.get_host() is None:
-        logger.debug('Could not retrieve new log paths. log_paths=%s, log_conf=%s', log_paths, log_conf)
-        return []
-    log_conf_logs = log_conf.get_host().get_logs()
-    if log_conf_logs is None:
-        logger.debug('Could not retrieve new log paths. log_paths=%s, hostname=%s', log_paths, log_conf.get_host().get_name())
-        return []
-    conf_log_paths = [log.get_filename() for log in log_conf_logs]
-    logger.info('Logs are already followed on this instance. hostname=%s, log_paths=%s',log_conf.get_host().get_name(), conf_log_paths)
-    new_log_paths = [log_path for log_path in log_paths if log_path not in conf_log_paths]
-    logger.info('New logs detected. hostname=%s, new_log_paths=%s',log_conf.get_host().get_name(), new_log_paths)
-    return new_log_paths
-
-def get_removed_logs(log_paths,log_conf):
-    """
-    Args:
-    log_conf is the Logentries-RSyslog configuration file of an instance.
-    log_paths is the currently known set of log file paths for this instance. It is assumed to not be None.
-    Returns the list of log paths that are known by the log configuration associated to this instance but are not part of the found log_paths.
-    """
-    if log_conf is None or log_conf.get_host() is None:
-        logger.debug('Could not retrieve removed log paths. log_paths=%s, log_conf=%s', log_paths, log_conf)
-        return []
-    log_conf_logs = log_conf.get_host().get_logs()
-    if log_conf_logs is None:
-        logger.debug('Could not retrieve removed log paths. log_paths=%s, hostname=%s', log_paths, log_conf.get_host().get_name())
-        return []
-    removed_logs = [log for log in log_conf_logs if log.get_filename() not in log_paths]
-    return removed_logs
-
 
 def create_host(log_client, instance_id):
     """

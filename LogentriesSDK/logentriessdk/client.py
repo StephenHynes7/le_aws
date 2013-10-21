@@ -364,7 +364,7 @@ class Client(object):
 		log_key = helpers.inspect_log( log )
 
 		request = {
-			'request': API_RM_LOG,
+			'request': constants.API_RM_LOG,
 			'user_key': self._account_key,
 			'host_key': host_key,
 			'log_key': log_key
@@ -372,7 +372,6 @@ class Client(object):
 
 		removed_log, success = self._conn.request( request )
 
-		self.rm_log_from_host( host_key, log_key )
 		if success:
 			return True
 		else:

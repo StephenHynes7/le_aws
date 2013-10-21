@@ -63,6 +63,8 @@ def get_instance_log_conf_file(instance_id):
     except:
         logger.debug('No version of the file present locally. host_name=%s, remote_filename=%s, local_filename=%s', host_name, rsyslog_conf_name, local_conf_name)
     # Get remote conf file or return None if it cannot be retrieved
+    if not files.exists(rsyslog_conf_name, use_sudo=True):
+        return None
     try:
         get(rsyslog_conf_name,local_conf_name)
     except:
@@ -426,7 +428,7 @@ def main(working_dir=None, cmd='', group_name='AWS'):
     elif cmd == 'clean':
         execute(set_instance_host_keys,hosts=list_hosts)
         execute(remove_hosts,group_name,hosts=list_hosts)
-    else:
+    elif cmd == '':
         execute(sync,hosts=list_hosts)
 
 

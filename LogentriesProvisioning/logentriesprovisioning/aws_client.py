@@ -195,12 +195,10 @@ class AWS_Client(object):
       """
       if ec2_instance.key_name is not None and ec2_instance.key_name in local_keys:
          if ec2_instance.platform is None:
-            print 'Platform is Linux for instance with id=%s and can be ssh-ed!'%ec2_instance.id
             logger.info('Platform is Linux for instance with id=%s and can be ssh-ed!',ec2_instance.id)
             platf = 'linux'
          else:
             platf = ec2_instance.platform
-            print 'Platform is %s for instance with id=%s'%(platf,ec2_instance.id)
             logger.info('Platform is %s for instance with id=%s',platf,ec2_instance.id)
             return None
          if 'Name' in ec2_instance.tags:
@@ -220,7 +218,6 @@ class AWS_Client(object):
       """
       sudo_user = None
       if ec2_instance.platform == 'windows':
-         print 'No attempt to ssh instance %s as its platform is %s'%(ec2_instance.id,ec2_instance.platform)
          logger.info('No attempt to ssh instance %s as its platform is %s',ec2_instance.id,ec2_instance.platform)
          return None
 
@@ -291,16 +288,13 @@ class AWS_Client(object):
                      if ec2_filter is None:
                         ec2_filter = {}
                      log_filter = self.get_aws_conf().get_log_filter(_filter)
-                     print str(log_filter)
                      if log_filter is None:
                         log_filter = '/var/log/.*log' 
                      ec2_instances = con.get_only_instances(filters=ec2_filter)
                      for ec2_instance in ec2_instances:
                         if ec2_instance.state != 'running':
-                           print 'Instance %s is not running, state=%s'%(ec2_instance.id,ec2_instance.state)
                            logger.info('Instance %s is not running, state=%s',ec2_instance.id,ec2_instance.state)
                            continue
-                        print log_filter
                         instance = self.load_instance_ssh_attributes(local_keys,ec2_instance,log_filter)
                         if instance is not None:
                            ssh_config.write(instance.get_ssh_config_entry())

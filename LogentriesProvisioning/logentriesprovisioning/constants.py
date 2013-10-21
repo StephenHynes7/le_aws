@@ -67,7 +67,6 @@ def set_aws_credentials(conf_file_name):
     global WORKING_DIR
     if conf_file_name is None:
         conf_file_name='%saws.json'%(WORKING_DIR+'/' if WORKING_DIR is not None else '')
-        print 'conf file name = %s'%conf_file_name
     try:
         aws_conf_file = open(conf_file_name,'r')
     except:

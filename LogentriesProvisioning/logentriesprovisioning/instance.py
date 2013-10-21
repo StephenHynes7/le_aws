@@ -290,11 +290,9 @@ class RemoteInstance(Instance):
              ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
              ssh.connect(self.get_ip_address(), username=username, key_filename=key_filename)
          except paramiko.SSHException as e:
-             print 'Connection to %s with user %s and ssh key %s failed. %s'%(self.get_ip_address(),username,key_filename,e)
              logger.warning('Connection to %s with user %s and ssh key %s failed. %s',self.get_ip_address(),username,key_filename,e)
              continue
          except socket.error as e1:
-             print 'Connection to %s with user %s and ssh key %s failed. %s'%(self.get_ip_address(),username,key_filename,e1)
              logger.warning('Connection to %s with user %s and ssh key %s failed. %s',self.get_ip_address(),username,key_filename,e1)
              continue
          try:
@@ -328,12 +326,10 @@ class RemoteInstance(Instance):
             print 'Could not open %s. %s'%(tmp_file_name,e.message)
             logger.error('Could not open %s. %s',tmp_file_name,e.message)
          log_paths.extend([logpath.split('\n')[0] for logpath in f.readlines()])
-      print 'Log Paths: %s'%log_paths
       logger.info('Log Paths: %s',log_paths)
       # Remove the remote tmp file
       _, _, stderr = ssh.exec_command('rm %s'%tmp_file_name)
       if stderr != '':
-         print 'Error while removing temporary file /tmp/log_list.txt on %s. %s'%(self.get_ip_address(),stderr.read())
          logger.error('Error while removing temporary file /tmp/log_list.txt on %s. %s',self.get_ip_address(),stderr.read())
       # set instance information
       self.set_logs([log_path for log_path in log_paths])
@@ -349,7 +345,6 @@ class RemoteInstance(Instance):
       try:
          log_conf_file = ssh.open_sftp().open(rsyslog_conf_name)
       except:
-         print 'Cannot open %s on remote instance %s'%(rsyslog_conf_name,self.get_instance_id())
          logger.warning('Cannot open %s on remote instance %s',rsyslog_conf_name,self.get_instance_id())
       if log_conf_file != None:
          log_conf = configfile.LoggingConfFile.load_file(log_conf_file,filename)
@@ -378,14 +373,12 @@ class RemoteInstance(Instance):
                ssh.connect(self.get_ip_address, username=username, key_filename=key_filename)
 
            except paramiko.SSHException as e:
-               print 'Connection to %s with user %s and ssh key %s failed. %s'%(self.get_ip_address(),username,key_filename,e)
                logger.error('Connection to %s with user %s and ssh key %s failed. %s',self.get_ip_address(),username,key_filename,e)
                continue
            # Copy the file previously saved onto the instance
            try:
                ssh.open_sftp().put(filename,'/tmp/%s'%filename)
            except:
-               print 'Transfering %s to remote /tmp/%s Failed'%(filename,filename)
                logger.error('Transfering %s to remote /tmp/%s Failed',filename,filename)
            # Restart syslogd
            # TODO: Capture errors and report them
@@ -398,25 +391,20 @@ class RemoteInstance(Instance):
                chan.get_pty()
                chan.exec_command('sudo service rsyslog restart > /tmp/output.txt')
            except paramiko.SSHException as e:
-               print 'Connection to %s with user %s and ssh key %s failed. %s'%(self.get_ip_address(),username,key_filename,e)
                logger.error('Connection to %s with user %s and ssh key %s failed. %s',self.get_ip_address(),username,key_filename,e)
            except:
-               print 'Connection to %s with user %s and ssh key %s failed. %s'%(self.get_ip_address(),username,key_filename)
                logger.error('Connection to %s with user %s and ssh key %s failed. %s',self.get_ip_address(),username,key_filename)
 
            try:
                f = ssh.open_sftp().open('/tmp/output.txt')
            except IOError as e:
-               print 'Could not open %s. %s'%('/tmp/output.txt',e.message)
                logger.error('Could not open %s. %s','/tmp/output.txt',e.message)
            for line in f.readlines():
                logger.info(line)
 
            if chan.recv_stderr_ready():
-               print 'Error when restarting rsyslog. %s'%chan.recv_stderr(1024)
                logger.error('Error when restarting rsyslog. %s',chan.recv_stderr(1024))
                return
-           print 'Rsyslog restarted successfully on %s'%self.get_instance_id()
            logger.info('Rsyslog restarted successfully on %s',self.get_instance_id())
 
    def update_instance_conf(self):
@@ -427,10 +415,8 @@ class RemoteInstance(Instance):
        log_client = LogClient.Client(self.get_aws_conf().get_account_key()) 
        if self.get_log_conf() is None and len(self.get_logs())>0:
            host = log_client.create_host(name='AWS_%s'%self.get_instance_id(),location='AWS')
-           print 'CREATED HOST: %s'%str(host.get_name())
            logger.info('Created Host: %s',str(host.get_name()))
            if host is None:
-               print 'Error when creating host for instance %s'%self.get_instance_id()
                logger.error('Error when creating host for instance %s',self.get_instance_id())
                return
            for log_name in self.get_logs():
@@ -441,7 +427,6 @@ class RemoteInstance(Instance):
            log_conf = self.get_log_conf()
            conf_host = log_conf.get_host()
            if conf_host is None:
-               print 'Error. This instance configuration is missing the corresponding model!! instance_id=%s'%self.get_instance_id()
                logger.error('Error. This instance configuration is missing the corresponding model!! instance_id=%s',self.get_instance_id())
                return None
 

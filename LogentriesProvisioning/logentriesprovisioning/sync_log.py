@@ -153,8 +153,8 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             logentries_host, log_key = log_client.create_log_token(host=logentries_host, log_name=new_log_name)
             logger.info('Log Created. hostname=%s, log_path=%s, key=%s', logentries_host.get_name(), new_log_name, log_key)
         for removed_log in  utils.get_removed_logs(log_paths, log_conf):
-            if removed_log is not None and log_client.remove_log(host=logentries_host, log_name=new_log_name):
-                logger.info('Log Removed. hostname=%s, log_path=%s', logentries_host.get_name(), removed_log)
+            if removed_log is not None and log_client.remove_log(host=logentries_host, log=removed_log):
+                logger.info('Log Removed. hostname=%s, log=%s', logentries_host.get_name(), removed_log.to_json())
         log_conf.set_host(logentries_host)
     return log_conf
 

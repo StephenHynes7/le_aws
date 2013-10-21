@@ -59,7 +59,7 @@ def get_instance_log_conf_file(instance_id):
     
     # Remove local version of the file if already present as it may be obsolete
     try:
-        local('rm %s'%local_conf_name)
+        local('rm %s'%local_conf_name, capture=True)
     except:
         logger.debug('No version of the file present locally. host_name=%s, remote_filename=%s, local_filename=%s', host_name, rsyslog_conf_name, local_conf_name)
     # Get remote conf file or return None if it cannot be retrieved
@@ -149,9 +149,10 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             #log_conf = configfile.LoggingConfFile(name='logentries_%s.conf'%host.get_name(),host=host)
             return None
 
-        existing_log_paths = [log.get_filename() for log in logentries_host.get_logs()]
-        logger.info('Logs are already followed on this instance. hostname=%s, log_paths=%s',log_conf.get_host().get_name(), existing_log_paths)
-        new_log_paths = [log_path for log_path in log_paths if log_path not in existing_log_paths]
+        logentries_logs = logentries_host.get_logs()
+        logentries_log_paths = [log.get_filename() for log in logentries_logs]
+        logger.info('Logs are already followed on this instance. hostname=%s, log_paths=%s',log_conf.get_host().get_name(), logentries_log_paths)
+        new_log_paths = [log_path for log_path in log_paths if log_path not in logentries_log_paths]
         logger.info('New logs detected. hostname=%s, new_log_paths=%s',log_conf.get_host().get_name(), new_log_paths)
 
 
@@ -159,10 +160,10 @@ def update_instance_conf(instance_id, log_paths, log_conf):
             logentries_host, log_key = log_client.create_log_token(host=logentries_host, log_name=new_log_name)
             logger.info('Log Created. hostname=%s, log_path=%s, key=%s', logentries_host.get_name(), new_log_name, log_key)
 
-        removed_logs = [log for log in existing_log_paths if log.get_filename() not in log_paths]
+        removed_logs = [removed_log for removed_log in logentries_logs if removed_log.get_filename() not in log_paths]
         for removed_log in removed_logs:
             if removed_log is not None and log_client.remove_log(host=logentries_host, log=removed_log):
-                logger.info('Log Removed. hostname=%s, log=%s', logentries_host.get_name(), removed_log.to_json())
+                logger.info('Log Removed. hostname=%s, log=%s', logentries_host.get_name(), removed_log)
         log_conf.set_host(logentries_host)
     return log_conf
 
@@ -263,7 +264,9 @@ def sync():
     host_name = '%s_%s'%(constants.get_group_name(), instance_id)
 
     log_paths = get_instance_log_paths(instance_id, log_filter)
-
+    if not files.exists('/etc/rsyslog.d/', use_sudo=True):
+        logger.info('Instance does not support rsyslog. hostname=%s', host_name)
+        return
     log_conf = get_instance_log_conf(instance_id)
     log_conf = update_instance_conf(instance_id, log_paths, log_conf)
     if log_conf is None:

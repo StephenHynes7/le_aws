@@ -4,6 +4,7 @@ import logentriessdk.constants as constants
 
 import socket
 import os
+import pkg_resources
 
 try:
 	import ssl
@@ -63,7 +64,8 @@ class LogentriesConnection:
 
 	def _make_api_call( self, request ):
 		try:
-                        cert_full_path = os.path.dirname(__file__)+'/cert.pem'
+                        cert_full_path = pkg_resources.resource_filename(__name__, 'logentriessdk/cert.pem')
+                        #cert_full_path = os.path.dirname(__file__)+'/cert.pem'
 			http = ServerHTTPSConnection( constants.LE_SERVER_API, constants.LE_SERVER_API_PORT, cert_file=cert_full_path)
 			params = urllib.urlencode(request)
 			http.request( "POST", "/", params)

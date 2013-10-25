@@ -4,6 +4,7 @@ LICENSE.txt
 README.txt
 setup.py
 logentriessdk/__init__.py
+logentriessdk/cert.pem
 logentriessdk/client.py
 logentriessdk/connection.py
 logentriessdk/constants.py

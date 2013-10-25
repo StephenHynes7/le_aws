@@ -7,6 +7,7 @@ setup(
     author_email='mark@logentries.com',
     packages=['logentriessdk', 'logentriessdk.test'],
     scripts=[],
+    data_files=[('logentriessdk', ['cert.pem'])],
     url='',
     license='LICENSE.txt',
     description='Logentries SDK to programatically manage Logentries accounts.',

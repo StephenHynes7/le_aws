@@ -3,6 +3,7 @@ from logentriessdk.exception import InvalidServerResponse, MissingModuleExceptio
 import logentriessdk.constants as constants
 
 import socket
+import os
 
 try:
 	import ssl
@@ -63,7 +64,7 @@ class LogentriesConnection:
 	def _make_api_call( self, request ):
 		try:
                         cert_full_path = os.path.dirname(__file__)+'/cert.pem'
-			http = httplib.ServerHTTPSConnection( constants.LE_SERVER_API, constants.LE_SERVER_API_PORT, cert_file=cert_full_path)
+			http = ServerHTTPSConnection( constants.LE_SERVER_API, constants.LE_SERVER_API_PORT, cert_file=cert_full_path)
 			params = urllib.urlencode(request)
 			http.request( "POST", "/", params)
 			resp = http.getresponse()

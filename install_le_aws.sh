@@ -151,7 +151,7 @@ python virtualenv-1.10/virtualenv.py env
 #GIT_REPO_LOCATION=file:///home/benoit/Logentries/git_repo/awswork
 
 # install boto and paramiko in the virtual environment
-env/bin/pip install boto
+env/bin/pip install boto==2.20.0
 env/bin/pip install fabric
 env/bin/pip install logentries
 

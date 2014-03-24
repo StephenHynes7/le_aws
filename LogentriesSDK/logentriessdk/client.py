@@ -73,7 +73,7 @@ class Client(object):
 	def get_account_key(self):
 		return self._account_key
 
-	def get_account(self):
+	def get_account(self, raw=False):
 		request = {
 			'request': constants.API_GET_ACCOUNT,
 			'user_key': self._account_key,
@@ -87,6 +87,8 @@ class Client(object):
 			return None
 
 		account = models.Account()
+		if raw:
+			return account_data
 		account.load_data(account_data)
 		return account
 
@@ -685,7 +687,7 @@ class Client(object):
 		if success and item in response:
 			return response[item]
 		else:
-			return None
+			return []
 
 if __name__ == '__main__':
 	client = Client(account_key='9d1d1f88-eb3a-4522-8196-f45414530ef7')

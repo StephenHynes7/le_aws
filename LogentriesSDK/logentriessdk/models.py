@@ -327,7 +327,7 @@ class Host(object):
 
 
 class Account(object):
-    def __init__(self, account_key=None, name='n/a/', created=None):
+    def __init__(self, account_key=None, name='n/a', created=None):
         self._account_key = account_key
         self._name = name
         self._created = created

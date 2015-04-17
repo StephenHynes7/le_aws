@@ -165,7 +165,7 @@ class Host(object):
         name = host_data['name'] if 'name' in host_data else None
         location = host_data['hostname'] if 'hostname' in host_data else None
         key = host_data['key'] if 'key' in host_data else None
-        created = host_data['created'] if 'created' in host_data else None
+        created = host_data['c'] if 'c' in host_data else None
         platform = host_data['platform'] if 'platform' in host_data else None
         logs_data = host_data['logs'] if 'logs' in host_data else None
         if name is not None:
